@@ -37,7 +37,7 @@ func searchTextInBodyHTML(searchText string, urls ...string) {
 }
 
 func main() {
-	searchTextInBodyHTML("МИД", "http://yandex.ru", "http://rambler.ru", "http://ria.ru")
 	searchTextInBodyHTML("Россия", "http://yandex.ru", "http://rambler.ru", "http://ria.ru")
+	searchTextInBodyHTML("МИД", "http://yandex.ru", "http://rambler.ru", "http://ria.ru")
 	searchTextInBodyHTML("Ананас", "http://yandex.ru", "http://rambler.ru", "http://ria.ru")
 }
