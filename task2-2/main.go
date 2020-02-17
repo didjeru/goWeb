@@ -65,6 +65,7 @@ func downloadFileFromYandexDisk(file string) error {
 }
 
 func main() {
+	 //only download
 	if err := downloadFileFromYandexDisk("https://yadi.sk/i/cwPl5546eUNUuQ"); err != nil {
 		panic(err.Error())
 	}
