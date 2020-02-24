@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"regexp"
 )
@@ -13,14 +12,14 @@ func searchTextInBodyHTML(searchText string, urls ...string) {
 		// Make HTTP request
 		response, err := http.Get(url)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
 		}
 		defer response.Body.Close()
 
 		// Read response data in to memory
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			log.Fatal("Error reading HTTP body. ", err)
+			fmt.Println("Error reading HTTP body: ", err)
 		}
 
 		// Create a regular expression to find comments
@@ -39,5 +38,5 @@ func searchTextInBodyHTML(searchText string, urls ...string) {
 func main() {
 	searchTextInBodyHTML("Посольство", "http://yandex.ru", "http://rambler.ru", "http://ria.ru")
 	searchTextInBodyHTML("Россия", "http://yandex.ru", "http://rambler.ru", "http://ria.ru")
-	searchTextInBodyHTML("Литва окончательно", "http://yandex.ru", "http://rambler.ru", "http://ria.ru")
+	searchTextInBodyHTML("Литва", "http://yandex.ru", "http://rambler.ru", "http://ria.ru")
 }
