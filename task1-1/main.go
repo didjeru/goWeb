@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -31,6 +30,7 @@ func searchTextInBodyHTML(searchText string, urls []string) []string {
 			errors++
 			log.Print(err)
 			continue
+
 		}
 
 		if strings.Contains(string(response), searchText) {
@@ -42,6 +42,7 @@ func searchTextInBodyHTML(searchText string, urls []string) []string {
 }
 
 func main() {
+
 	urls := []string{
 		"http://yandex.ru",
 		"http://rambler.ru",
