@@ -1,4 +1,4 @@
-package main
+package search
 
 import (
 	"io/ioutil"
@@ -21,9 +21,16 @@ func getReq(url string) ([]byte, error) {
 	return body, nil
 }
 
-func searchTextInBodyHTML(searchText string, urls []string) []string {
+// TextInBodyHTML - search text in a body of the HTML page
+func TextInBodyHTML(searchText string) []string {
 	result := make([]string, 0, 1)
 	errors := 0
+	urls := []string{
+		"https://yandex.ru/news",
+		"https://rambler.ru",
+		"https://ria.ru",
+		"https://rbc.ru",
+	}
 
 	for _, url := range urls {
 		response, err := getReq(url)
@@ -39,15 +46,4 @@ func searchTextInBodyHTML(searchText string, urls []string) []string {
 	}
 
 	return result
-}
-
-func main() {
-	urls := []string{
-		"http://yandex.ru",
-		"http://rambler.ru",
-		"http://ria.ru",
-	}
-	log.Println(searchTextInBodyHTML("Польша", urls))
-	log.Println(searchTextInBodyHTML("Россия", urls))
-	log.Println(searchTextInBodyHTML("США", urls))
 }
