@@ -24,5 +24,5 @@ go run main.go
 
 ```shell
 $ go run main.go
-server started
+2020/02/25 01:05:53 start listen on port 8080
 ```
