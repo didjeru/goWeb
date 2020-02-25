@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"./search"
+	"github.com/google/uuid"
 )
 
 func main() {
 	router := http.NewServeMux()
 
-	router.HandleFunc("/", firstHandle)
+	router.HandleFunc("/", startPageHandler)
 	router.HandleFunc("/user", helloUserHandler)
 	router.HandleFunc("/search", searchHandler)
 	router.HandleFunc("/write_cookie", writeCookieHandler)
@@ -23,7 +24,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
-func firstHandle(wr http.ResponseWriter, _ *http.Request) {
+func startPageHandler(wr http.ResponseWriter, _ *http.Request) {
 	if _, err := wr.Write([]byte(`Hello, World!`)); err != nil {
 		log.Print(err)
 	}
@@ -37,24 +38,35 @@ func helloUserHandler(wr http.ResponseWriter, req *http.Request) {
 
 func searchHandler(wr http.ResponseWriter, req *http.Request) {
 	searchString := req.URL.Query().Get("string")
-	if _, err := fmt.Fprintf(wr, "Search string %s, found on this sites: %v", searchString, search.TextInBodyHTML(searchString)); err != nil {
+	result, err :=  search.TextInBodyHTML(searchString))
+	if err != nil {
 		log.Print(err)
+	}
+	if result != nil {
+		fmt.Fprintf(wr, "Search %s, found on this sites: %v", searchString, result)
+	} else {
+		fmt.Fprint(wr, "Nothing found!")
 	}
 }
 
 func writeCookieHandler(wr http.ResponseWriter, req *http.Request) {
-	http.SetCookie(wr, &http.Cookie{
-		Name:    req.URL.Query().Get("name"),
-		Value:   req.URL.Query().Get("value"),
-		Expires: time.Now().Add(time.Minute * 10),
-	})
-	fmt.Fprint(wr, "Cookie changed!")
+	if sessionToken, err := uuid.NewUUID(); err != nil {
+		fmt.Fprint(wr, err)
+	} else {
+		http.SetCookie(wr, &http.Cookie{
+			Name:    "session_token",
+			Value:   sessionToken.String(),
+			Expires: time.Now().Add(time.Minute * 10),
+		})
+		fmt.Fprint(wr, "Cookie changed!")
+	}
 }
 
 func readCookieHandler(wr http.ResponseWriter, req *http.Request) {
 	name, err := req.Cookie(string(req.URL.Query().Get("string")))
 	if err != nil {
 		fmt.Fprint(wr, "Error - ", err)
+	} else {
+		fmt.Fprintf(wr, "Cookies value - %s", name)
 	}
-	fmt.Fprintf(wr, "Cookies value - %s", name)
 }
