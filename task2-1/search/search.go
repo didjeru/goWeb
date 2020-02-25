@@ -22,20 +22,12 @@ func getReq(url string) ([]byte, error) {
 }
 
 // TextInBodyHTML - search text in a body of the HTML page
-func TextInBodyHTML(searchText string) []string {
+func TextInBodyHTML(searchText string, urls []string) []string {
 	result := make([]string, 0, 1)
-	errors := 0
-	urls := []string{
-		"https://yandex.ru/news",
-		"https://rambler.ru",
-		"https://ria.ru",
-		"https://rbc.ru",
-	}
 
 	for _, url := range urls {
 		response, err := getReq(url)
 		if err != nil {
-			errors++
 			log.Print(err)
 			continue
 		}
