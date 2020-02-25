@@ -15,8 +15,8 @@ func main() {
 	router.HandleFunc("/", firstHandle)
 	router.HandleFunc("/user", helloUserHandler)
 	router.HandleFunc("/search", searchHandler)
-	router.HandleFunc("/write_cook", writeCook)
-	router.HandleFunc("/read_cook", readCook)
+	router.HandleFunc("/write_cookie", writeCookieHandler)
+	router.HandleFunc("/read_cookie", readCookieHandler)
 
 	port := "8080"
 	log.Printf("start listen on port %v", port)
@@ -24,28 +24,25 @@ func main() {
 }
 
 func firstHandle(wr http.ResponseWriter, _ *http.Request) {
-	_, err := wr.Write([]byte(`Hello, World!`))
-	if err != nil {
+	if _, err := wr.Write([]byte(`Hello, World!`)); err != nil {
 		log.Print(err)
 	}
 }
 
 func helloUserHandler(wr http.ResponseWriter, req *http.Request) {
-	_, err := fmt.Fprintf(wr, "Hello, %s", req.URL.Query().Get("name"))
-	if err != nil {
+	if _, err := fmt.Fprintf(wr, "Hello, %s", req.URL.Query().Get("name")); err != nil {
 		log.Print(err)
 	}
 }
 
 func searchHandler(wr http.ResponseWriter, req *http.Request) {
 	searchString := req.URL.Query().Get("string")
-	_, err := fmt.Fprintf(wr, "Search string %s, found on this sites: %v", searchString, search.TextInBodyHTML(searchString))
-	if err != nil {
+	if _, err := fmt.Fprintf(wr, "Search string %s, found on this sites: %v", searchString, search.TextInBodyHTML(searchString)); err != nil {
 		log.Print(err)
 	}
 }
 
-func writeCook(wr http.ResponseWriter, req *http.Request) {
+func writeCookieHandler(wr http.ResponseWriter, req *http.Request) {
 	http.SetCookie(wr, &http.Cookie{
 		Name:    req.URL.Query().Get("name"),
 		Value:   req.URL.Query().Get("value"),
@@ -54,10 +51,10 @@ func writeCook(wr http.ResponseWriter, req *http.Request) {
 	fmt.Fprint(wr, "Cookie changed!")
 }
 
-func readCook(wr http.ResponseWriter, req *http.Request) {
+func readCookieHandler(wr http.ResponseWriter, req *http.Request) {
 	name, err := req.Cookie(string(req.URL.Query().Get("string")))
 	if err != nil {
-		fmt.Fprintf(wr, "Error - ", err)
+		fmt.Fprint(wr, "Error - ", err)
 	}
 	fmt.Fprintf(wr, "Cookies value - %s", name)
 }
