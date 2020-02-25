@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -9,6 +11,11 @@ import (
 	"./search"
 	"github.com/google/uuid"
 )
+
+type SearchValues struct {
+	String string   `json:"search"`
+	Sites  []string `json:"sites"`
+}
 
 func main() {
 	router := http.NewServeMux()
@@ -36,16 +43,38 @@ func helloUserHandler(wr http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func searchHandler(wr http.ResponseWriter, req *http.Request) {
-	searchString := req.URL.Query().Get("string")
-	result, err :=  search.TextInBodyHTML(searchString))
+func getJSON(url string, target interface{}) error {
+	resp, err := http.Get(url)
 	if err != nil {
-		log.Print(err)
+		return err
 	}
-	if result != nil {
-		fmt.Fprintf(wr, "Search %s, found on this sites: %v", searchString, result)
-	} else {
-		fmt.Fprint(wr, "Nothing found!")
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(body, target)
+}
+
+func searchHandler(wr http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return
+	}
+	searchValues := new(SearchValues)
+	if err := json.Unmarshal(body, searchValues); err != nil {
+		return
+	}
+	result := search.TextInBodyHTML(searchValues.String, searchValues.Sites)
+	bytes, err := json.Marshal(result)
+	if err != nil {
+		return
+	}
+	_, err = wr.Write(bytes)
+	if err != nil {
+		return
 	}
 }
 
@@ -66,7 +95,7 @@ func readCookieHandler(wr http.ResponseWriter, req *http.Request) {
 	name, err := req.Cookie(string(req.URL.Query().Get("string")))
 	if err != nil {
 		fmt.Fprint(wr, "Error - ", err)
-	} else {
-		fmt.Fprintf(wr, "Cookies value - %s", name)
+		return
 	}
+	fmt.Fprintf(wr, "Cookies value - %s", name)
 }
