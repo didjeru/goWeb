@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// SearchValues - struct of search values
 type SearchValues struct {
 	String string   `json:"search"`
 	Sites  []string `json:"sites"`
@@ -43,37 +44,30 @@ func helloUserHandler(wr http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func getJSON(url string, target interface{}) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return json.Unmarshal(body, target)
-}
-
 func searchHandler(wr http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		fmt.Fprint(wr, "Request should be POST")
+		return
+	}
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
+		log.Print(err)
 		return
 	}
 	searchValues := new(SearchValues)
 	if err := json.Unmarshal(body, searchValues); err != nil {
+		log.Print(err)
 		return
 	}
 	result := search.TextInBodyHTML(searchValues.String, searchValues.Sites)
 	bytes, err := json.Marshal(result)
 	if err != nil {
+		log.Print(err)
 		return
 	}
 	_, err = wr.Write(bytes)
 	if err != nil {
+		log.Print(err)
 		return
 	}
 }
