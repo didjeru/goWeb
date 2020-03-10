@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>New / Edit post</title>
+</head>
+
+<body>
+    <a href="/">Back</a>
+    <form method="POST" action="/save">
+        <input name="id" type="hidden" value="{{.ID}}" />
+        <label for="title">Title:</label>
+        <input id="title" name="title" type="text" value="{{.Title}}" />
+        <label for="content">Content:</label>
+        <textarea id="content" name="content">{{.Content}}</textarea>
+        <button type="submit">Save</button>
+    </form>
+</body>
+
+</html>
