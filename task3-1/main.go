@@ -10,8 +10,6 @@ import (
 	"path"
 	"strings"
 
-	"./templates"
-
 	"github.com/bmizerany/pat"
 )
 
@@ -23,7 +21,7 @@ var (
 	// компилируем шаблоны, если не удалось, то выходим
 	postTemplate  = template.Must(template.ParseFiles(path.Join("./templates", "layout.html"), path.Join("./templates", "post.html")))
 	errorTemplate = template.Must(template.ParseFiles(path.Join("./templates", "layout.html"), path.Join("./templates", "error.html")))
-	posts         = templates.NewPostArray()
+	posts         = newPostArray()
 )
 
 type config struct {
@@ -50,7 +48,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	// для отдачи сервером статичных файлов из папки public/static
-	fs := noDirListing(http.FileServer(http.Dir("/public/static")))
+	fs := noDirListing(http.FileServer(http.Dir("./public/static")))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	mux := pat.New()
@@ -89,7 +87,7 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 		// получим posts/p1.md
 		postMD = p + ".md"
 	}
-	post, status, err := posts.Get(postMD)
+	post, status, err := posts.get(postMD)
 	if err != nil {
 		errorHandler(w, r, status)
 		return
