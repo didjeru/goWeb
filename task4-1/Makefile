@@ -1,5 +1,0 @@
-
-all:
-	go run *.go
-
-

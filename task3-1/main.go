@@ -1,124 +1,123 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"html/template"
-	"io/ioutil"
+	"./db"
+	"./models"
+	"./templates"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
-	"path"
-	"strings"
-
-	"github.com/bmizerany/pat"
+	"strconv"
 )
 
-const (
-	configFileName = "config.json"
-)
-
-var (
-	// компилируем шаблоны, если не удалось, то выходим
-	postTemplate  = template.Must(template.ParseFiles(path.Join("./templates", "layout.html"), path.Join("./templates", "post.html")))
-	errorTemplate = template.Must(template.ParseFiles(path.Join("./templates", "layout.html"), path.Join("./templates", "error.html")))
-	posts         = newPostArray()
-)
-
-type config struct {
-	Port string `json:"port"`
-}
-
-func readConfig(ConfigName string) (x *config, err error) {
-	var file []byte
-	if file, err = ioutil.ReadFile(ConfigName); err != nil {
-		return nil, err
-	}
-
-	file = bytes.TrimPrefix(file, []byte("\xef\xbb\xbf"))
-	x = new(config)
-	if err = json.Unmarshal(file, x); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
+var data = db.Init()
+var tpls = templates.Init()
 
 func main() {
-	cfg, err := readConfig(configFileName)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// для отдачи сервером статичных файлов из папки public/static
-	fs := noDirListing(http.FileServer(http.Dir("./public/static")))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	http.HandleFunc("/new", newPostHandler)
+	http.HandleFunc("/edit", editPostHandler)
+	http.HandleFunc("/post", getPostHandler)
+	http.HandleFunc("/save", savePostHandler)
+	http.HandleFunc("/", indexHandler)
 
-	mux := pat.New()
-	mux.Get("/:page", http.HandlerFunc(postHandler))
-	mux.Get("/:page/", http.HandlerFunc(postHandler))
-	mux.Get("/", http.HandlerFunc(postHandler))
-
-	http.Handle("/", mux)
-	log.Printf("Listening %s...", cfg.Port)
-	log.Fatalln(http.ListenAndServe(":"+cfg.Port, nil))
+	port := "8080"
+	log.Println("Server started at port", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-func postHandler(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-	// Извлекаем параметр
-	// Например, в http://127.0.0.1:8080/p1 page = "p1"
-	// в http://127.0.0.1:8080/ page = ""
-	page := params.Get(":page")
-	// Путь к файлу (без расширения)
-	// Например, posts/p1
-	p := path.Join("./public/posts", page)
+func getIDFromQuery(req *http.Request) (int, error) {
+	keys, ok := req.URL.Query()["id"]
 
-	var postMD string
+	if !ok || len(keys[0]) < 1 {
+		return -1, errors.New("Url Param 'id' is missing")
+	}
 
-	if page == "" {
-		// если page пусто, то выдаем главную
-		postMD = p + "/index.md"
-	} else if page == "add" {
-		log.Println(p)
-		postMD = "./public/posts/index.md"
-	} else if page == "edit" {
-		log.Println(p)
-		postMD = "./public/posts/index.md"
+	return strconv.Atoi(keys[0])
+}
+
+func indexHandler(res http.ResponseWriter, req *http.Request) {
+	if req.URL.Path != "/" {
+		errorHandler(res, req, http.StatusNotFound)
+		return
+	}
+
+	tpl := tpls.GetTemplateByName("index")
+	tpl.Execute(res, data.GetAllPosts())
+}
+
+func getPostHandler(res http.ResponseWriter, req *http.Request) {
+	id, err := getIDFromQuery(req)
+
+	if err != nil {
+		log.Println(err)
+		errorHandler(res, req, http.StatusNotFound)
+		return
+	}
+
+	tpl := tpls.GetTemplateByName("post")
+	tpl.Execute(res, data.GetPostByID(id))
+}
+
+func editPostHandler(res http.ResponseWriter, req *http.Request) {
+	id, err := getIDFromQuery(req)
+
+	if err != nil {
+		log.Println(err)
+		errorHandler(res, req, http.StatusNotFound)
+		return
+	}
+
+	tpl := tpls.GetTemplateByName("edit")
+	tpl.Execute(res, data.GetPostByID(id))
+}
+
+func savePostHandler(res http.ResponseWriter, req *http.Request) {
+	err := req.ParseForm()
+
+	if err != nil {
+		log.Println(err)
+		errorHandler(res, req, http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(req.PostFormValue("id"))
+
+	if err != nil {
+		log.Println(err)
+		errorHandler(res, req, http.StatusInternalServerError)
+		return
+	}
+
+	title := req.PostFormValue("title")
+	content := req.PostFormValue("content")
+
+	if data.IsPostExists(id) {
+		data.UpdatePost(id, title, content)
 	} else {
-		// если page не пусто, то считаем, что запрашивается файл
-		// получим posts/p1.md
-		postMD = p + ".md"
-	}
-	post, status, err := posts.get(postMD)
-	if err != nil {
-		errorHandler(w, r, status)
-		return
-	}
-	if err := postTemplate.ExecuteTemplate(w, "layout", post); err != nil {
-		log.Println(err.Error())
-		errorHandler(w, r, 500)
+		data.AddNewPost(title, content)
 	}
 
+	http.Redirect(res, req, "/", 301)
 }
 
-func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
-	log.Printf("error %d %s %s\n", status, r.RemoteAddr, r.URL.Path)
-	w.WriteHeader(status)
-	if err := errorTemplate.ExecuteTemplate(w, "layout", map[string]interface{}{"Error": http.StatusText(status), "Status": status}); err != nil {
-		log.Println(err.Error())
-		http.Error(w, http.StatusText(500), 500)
-		return
-	}
+func newPostHandler(res http.ResponseWriter, req *http.Request) {
+	tpl := tpls.GetTemplateByName("edit")
+	tpl.Execute(res, models.NewPost(-1, "", ""))
 }
 
-// обертка для http.FileServer, чтобы она не выдавала список файлов
-// например, если открыть http://127.0.0.1:8080/static/,
-// то будет видно список файлов внутри каталога.
-// noDirListing - вернет 404 ошибку в этом случае.
-func noDirListing(h http.Handler) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/") || r.URL.Path == "" {
-			http.NotFound(w, r)
-			return
-		}
-		h.ServeHTTP(w, r)
-	})
+func errorHandler(res http.ResponseWriter, req *http.Request, status int) {
+	res.WriteHeader(status)
+
+	if status == http.StatusBadRequest {
+		fmt.Fprint(res, "bad request")
+	}
+
+	if status == http.StatusNotFound {
+		fmt.Fprint(res, "custom 404")
+	}
+
+	if status == http.StatusInternalServerError {
+		fmt.Fprint(res, "custom 500")
+	}
 }
