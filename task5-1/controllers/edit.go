@@ -4,34 +4,32 @@ import (
 	"../models"
 	"database/sql"
 	"github.com/astaxie/beego"
+	"strconv"
 )
 
-type SinglePost struct {
+type EditPost struct {
 	beego.Controller
 	Db *sql.DB
 }
 
-func (c *SinglePost) Get() {
-	post, err := getPost(c.Db, c.Ctx.Input.Param(":id"))
+func (c *EditPost) Post() {
+
+	idStr := c.Ctx.Request.FormValue("id")
+	id, err := strconv.Atoi(idStr)
+
 	if err != nil {
 		c.Ctx.ResponseWriter.WriteHeader(500)
 		_, _ = c.Ctx.ResponseWriter.Write([]byte(err.Error()))
 		return
 	}
 
-	c.Data["Post"] = post
-	c.TplName = "single.tpl"
-}
-
-func (c *SinglePost) Post() {
-
 	post := models.Post{
-		ID:      -1,
+		ID:      id,
 		Title:   c.Ctx.Request.FormValue("title"),
 		Content: c.Ctx.Request.FormValue("content"),
 	}
 
-	if err := addPost(c.Db, post); err != nil {
+	if err := editPost(c.Db, &post, idStr); err != nil {
 		c.Ctx.ResponseWriter.WriteHeader(500)
 		_, _ = c.Ctx.ResponseWriter.Write([]byte(err.Error()))
 		return

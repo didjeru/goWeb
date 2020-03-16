@@ -41,4 +41,21 @@ func init() {
 	beego.Router("/prepare/:id", &controllers.Prepare{
 		Db: db,
 	})
+
+	beego.Router("/edit/:id", &controllers.EditPost{
+		Db: db,
+	})
+
+	beego.Router("/new", &controllers.NewPost{
+		Db: db,
+	})
+
+	beego.Router("/post", &controllers.SinglePost{
+		Db: db,
+	})
+
+	beego.Router("/delete/:id", &controllers.DeletePost{
+		Db: db,
+	})
+
 }

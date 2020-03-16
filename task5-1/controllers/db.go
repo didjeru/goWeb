@@ -51,8 +51,8 @@ func getPost(db *sql.DB, id string) (models.Post, error) {
 }
 
 func addPost(db *sql.DB, post models.Post) error {
-	_, err := db.Exec(`INSERT into `+databaseName+`.`+tableName+` (id,title,content) values (?,?,?);`,
-		post.ID, post.Title, post.Content)
+	_, err := db.Exec(`INSERT into `+databaseName+`.`+tableName+` (title,content) values (?,?);`,
+		post.Title, post.Content)
 
 	return err
 }
