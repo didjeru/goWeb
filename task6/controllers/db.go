@@ -46,7 +46,7 @@ func getPost(db *mongo.Client, id string) (models.Post, error) {
 		return models.Post{}, errors.Wrap(err, "decode")
 	}
 
-	return *post, nil
+	return *post, err
 }
 
 func addPost(db *mongo.Client, post models.Post) error {

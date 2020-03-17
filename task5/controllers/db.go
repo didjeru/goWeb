@@ -4,6 +4,7 @@ import (
 	"../models"
 	"database/sql"
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 )
 
@@ -17,7 +18,7 @@ func getPosts(db *sql.DB) ([]models.Post, error) {
 
 	rows, err := db.Query(`select * from ` + databaseName + `.` + tableName)
 	if err != nil {
-		return res, err
+		return nil, errors.Wrap(err, "Find")
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -29,25 +30,25 @@ func getPosts(db *sql.DB) ([]models.Post, error) {
 		post := models.Post{}
 
 		if err := rows.Scan(&post.ID, &post.Title, &post.Content); err != nil {
-			log.Println(err)
-			continue
+			errors.Wrap(err, "Rows")
 		}
 
 		res = append(res, post)
 	}
 
-	return res, nil
+	return res, err
 }
 
 func getPost(db *sql.DB, id string) (models.Post, error) {
 	row := db.QueryRow(fmt.Sprintf(`select * from `+databaseName+`.`+tableName+` WHERE id = %v`, id))
 
 	post := models.Post{}
-	if err := row.Scan(&post.ID, &post.Title, &post.Content); err != nil {
-		return models.Post{}, err
+	err := row.Scan(&post.ID, &post.Title, &post.Content)
+	if err != nil {
+		return models.Post{}, errors.Wrap(err, "Row")
 	}
 
-	return post, nil
+	return post, err
 }
 
 func addPost(db *sql.DB, post models.Post) error {
