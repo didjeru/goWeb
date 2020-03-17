@@ -20,7 +20,7 @@
                         <p>{{.Content}}</p>
                         <a class="uk-button uk-button-default" href="/post/{{.ID}}">ПОДРОБНЕЕ</a>
                         <a class="uk-button uk-button-default" href="/prepare/{{.ID}}">РЕДАКТИРОВАТЬ ПОСТ</a>
-                        <a class="uk-button uk-button-danger" href="/delete/{{.ID}}">УДАЛИТЬ ПОСТ</a>
+                        <a class="uk-button  uk-button-danger" href="/" onClick="doDelete({{.ID}})">УДАЛИТЬ</a>
                     </div>
                 </li>
             {{end}}

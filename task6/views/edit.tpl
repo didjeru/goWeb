@@ -19,7 +19,8 @@
             <textarea name="content" class="form-control">{{.Post.Content}}</textarea>
         </div>
         <input class="btn btn-primary" type="submit" value="Save">
-        <a class="btn btn-outline-primary" href="/">Back</a>
+        <a class="btn btn-danger" href="/" onClick="doDelete({{.Post.ID}})">Удалить</a>
+        <a class="btn btn-outline-primary" href="/">Назад</a>
     </form>
 </div>
 {{template "footer.tpl"}}

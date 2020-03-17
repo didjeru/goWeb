@@ -46,8 +46,4 @@ func init() {
 		Db: db,
 	})
 
-	beego.Router("/delete/:id", &controllers.DeletePost{
-		Db: db,
-	})
-
 }
