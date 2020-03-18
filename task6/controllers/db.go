@@ -36,7 +36,7 @@ func getPost(db *mongo.Client, id string) (models.Post, error) {
 	c := db.Database(databaseName).Collection(tableName)
 	docId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		errors.Wrap(err, "objToHex")
+		return models.Post{}, errors.Wrap(err, "objToHex")
 	}
 	filter := bson.D{{Key: "_id", Value: docId}}
 	res := c.FindOne(context.Background(), filter)
@@ -46,7 +46,7 @@ func getPost(db *mongo.Client, id string) (models.Post, error) {
 		return models.Post{}, errors.Wrap(err, "decode")
 	}
 
-	return *post, err
+	return *post, nil
 }
 
 func addPost(db *mongo.Client, post models.Post) error {
@@ -59,7 +59,7 @@ func addPost(db *mongo.Client, post models.Post) error {
 func editPost(db *mongo.Client, post *models.Post, id string) error {
 	docId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		errors.Wrap(err, "objToHex")
+		return errors.Wrap(err, "objToHex")
 	}
 	filter := bson.D{{Key: "_id", Value: docId}}
 
@@ -78,7 +78,7 @@ func editPost(db *mongo.Client, post *models.Post, id string) error {
 func deletePost(db *mongo.Client, id string) error {
 	docId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		errors.Wrap(err, "objToHex")
+		return errors.Wrap(err, "objToHex")
 	}
 
 	filter := bson.D{{Key: "_id", Value: docId}}

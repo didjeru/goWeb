@@ -29,14 +29,15 @@ func getPosts(db *sql.DB) ([]models.Post, error) {
 	for rows.Next() {
 		post := models.Post{}
 
-		if err := rows.Scan(&post.ID, &post.Title, &post.Content); err != nil {
-			errors.Wrap(err, "Rows")
+		err := rows.Scan(&post.ID, &post.Title, &post.Content)
+		if err != nil {
+			return nil, errors.Wrap(err, "Rows")
 		}
 
 		res = append(res, post)
 	}
 
-	return res, err
+	return res, nil
 }
 
 func getPost(db *sql.DB, id string) (models.Post, error) {
@@ -48,7 +49,7 @@ func getPost(db *sql.DB, id string) (models.Post, error) {
 		return models.Post{}, errors.Wrap(err, "Row")
 	}
 
-	return post, err
+	return post, nil
 }
 
 func addPost(db *sql.DB, post models.Post) error {
