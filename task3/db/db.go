@@ -1,10 +1,14 @@
 package db
 
-import "../models"
+import (
+	"../models"
+	"sync"
+)
 
 // DB database of project
 type DB struct {
 	posts map[int]models.Post
+	mux   sync.Mutex
 }
 
 // AddNewPost add a new post
@@ -15,7 +19,9 @@ func (db *DB) AddNewPost(title string, content string) {
 
 // IsPostExists Check if post is exist
 func (db *DB) IsPostExists(id int) bool {
+	db.mux.Lock()
 	_, ok := db.posts[id]
+	db.mux.Unlock()
 	return ok
 }
 

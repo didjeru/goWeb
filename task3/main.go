@@ -28,22 +28,22 @@ func main() {
 
 func getIDFromQuery(req *http.Request) (int, error) {
 	keys, ok := req.URL.Query()["id"]
-
 	if !ok || len(keys[0]) < 1 {
 		return -1, errors.New("Url Param 'id' is missing")
 	}
-
 	return strconv.Atoi(keys[0])
 }
 
 func indexHandler(res http.ResponseWriter, req *http.Request) {
 	if req.URL.Path != "/" {
-		errorHandler(res, req, http.StatusNotFound)
+		errorHandler(res, http.StatusNotFound)
 		return
 	}
 
 	tpl := tpls.GetTemplateByName("index")
-	tpl.Execute(res, data.GetAllPosts())
+	if err := tpl.Execute(res, data.GetAllPosts()); err != nil {
+		log.Println(err)
+	}
 }
 
 func getPostHandler(res http.ResponseWriter, req *http.Request) {
@@ -51,12 +51,14 @@ func getPostHandler(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		log.Println(err)
-		errorHandler(res, req, http.StatusNotFound)
+		errorHandler(res, http.StatusNotFound)
 		return
 	}
 
 	tpl := tpls.GetTemplateByName("post")
-	tpl.Execute(res, data.GetPostByID(id))
+	if err := tpl.Execute(res, data.GetPostByID(id)); err != nil {
+		log.Println(err)
+	}
 }
 
 func editPostHandler(res http.ResponseWriter, req *http.Request) {
@@ -64,12 +66,14 @@ func editPostHandler(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		log.Println(err)
-		errorHandler(res, req, http.StatusNotFound)
+		errorHandler(res, http.StatusNotFound)
 		return
 	}
 
 	tpl := tpls.GetTemplateByName("edit")
-	tpl.Execute(res, data.GetPostByID(id))
+	if err := tpl.Execute(res, data.GetPostByID(id)); err != nil {
+		log.Println(err)
+	}
 }
 
 func savePostHandler(res http.ResponseWriter, req *http.Request) {
@@ -77,7 +81,7 @@ func savePostHandler(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		log.Println(err)
-		errorHandler(res, req, http.StatusBadRequest)
+		errorHandler(res, http.StatusBadRequest)
 		return
 	}
 
@@ -85,7 +89,7 @@ func savePostHandler(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		log.Println(err)
-		errorHandler(res, req, http.StatusInternalServerError)
+		errorHandler(res, http.StatusInternalServerError)
 		return
 	}
 
@@ -103,21 +107,25 @@ func savePostHandler(res http.ResponseWriter, req *http.Request) {
 
 func newPostHandler(res http.ResponseWriter, req *http.Request) {
 	tpl := tpls.GetTemplateByName("edit")
-	tpl.Execute(res, models.NewPost(-1, "", ""))
+	if err := tpl.Execute(res, models.NewPost(-1, "", "")); err != nil {
+		log.Println(err)
+	}
 }
 
-func errorHandler(res http.ResponseWriter, req *http.Request, status int) {
+func errorHandler(res http.ResponseWriter, status int) {
 	res.WriteHeader(status)
-
-	if status == http.StatusBadRequest {
-		fmt.Fprint(res, "bad request")
-	}
-
-	if status == http.StatusNotFound {
-		fmt.Fprint(res, "custom 404")
-	}
-
-	if status == http.StatusInternalServerError {
-		fmt.Fprint(res, "custom 500")
+	switch status {
+	case http.StatusBadRequest:
+		if _, err := fmt.Fprint(res, "bad request"); err != nil {
+			log.Println(err)
+		}
+	case http.StatusNotFound:
+		if _, err := fmt.Fprint(res, "404 not found"); err != nil {
+			log.Println(err)
+		}
+	case http.StatusInternalServerError:
+		if _, err := fmt.Fprint(res, "custom 500"); err != nil {
+			log.Println(err)
+		}
 	}
 }
