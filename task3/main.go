@@ -12,7 +12,7 @@ import (
 )
 
 var data = db.Init()
-var tpls = templates.Init()
+var tmpl = templates.Init()
 
 func main() {
 	http.HandleFunc("/new", newPostHandler)
@@ -40,7 +40,7 @@ func indexHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tpl := tpls.GetTemplateByName("index")
+	tpl := tmpl.GetTemplateByName("index")
 	if err := tpl.Execute(res, data.GetAllPosts()); err != nil {
 		log.Println(err)
 	}
@@ -55,7 +55,7 @@ func getPostHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tpl := tpls.GetTemplateByName("post")
+	tpl := tmpl.GetTemplateByName("post")
 	if err := tpl.Execute(res, data.GetPostByID(id)); err != nil {
 		log.Println(err)
 	}
@@ -70,7 +70,7 @@ func editPostHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tpl := tpls.GetTemplateByName("edit")
+	tpl := tmpl.GetTemplateByName("edit")
 	if err := tpl.Execute(res, data.GetPostByID(id)); err != nil {
 		log.Println(err)
 	}
@@ -106,7 +106,7 @@ func savePostHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func newPostHandler(res http.ResponseWriter, req *http.Request) {
-	tpl := tpls.GetTemplateByName("edit")
+	tpl := tmpl.GetTemplateByName("edit")
 	if err := tpl.Execute(res, models.NewPost(-1, "", "")); err != nil {
 		log.Println(err)
 	}
@@ -114,18 +114,16 @@ func newPostHandler(res http.ResponseWriter, req *http.Request) {
 
 func errorHandler(res http.ResponseWriter, status int) {
 	res.WriteHeader(status)
+	var err error
 	switch status {
 	case http.StatusBadRequest:
-		if _, err := fmt.Fprint(res, "bad request"); err != nil {
-			log.Println(err)
-		}
+		_, err = fmt.Fprint(res, "bad request")
 	case http.StatusNotFound:
-		if _, err := fmt.Fprint(res, "404 not found"); err != nil {
-			log.Println(err)
-		}
+		_, err = fmt.Fprint(res, "404 not found")
 	case http.StatusInternalServerError:
-		if _, err := fmt.Fprint(res, "custom 500"); err != nil {
-			log.Println(err)
-		}
+		_, err = fmt.Fprint(res, "custom 500")
+	}
+	if err != nil {
+		log.Println(err)
 	}
 }
