@@ -16,14 +16,12 @@ func (db *DB) AddNewPost(title string, content string) {
 	id := db.GetCountPosts()
 	db.Lock()
 	db.posts[id] = models.NewPost(id, title, content)
-	db.Lock()
+	db.Unlock()
 }
 
 // IsPostExists Check if post is exist
 func (db *DB) IsPostExists(id int) bool {
-	db.Lock()
 	_, ok := db.posts[id]
-	db.Unlock()
 	return ok
 }
 

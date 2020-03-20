@@ -29,7 +29,7 @@ func main() {
 func getIDFromQuery(req *http.Request) (int, error) {
 	keys, ok := req.URL.Query()["id"]
 	if !ok || len(keys[0]) < 1 {
-		return -1, errors.New("Url Param 'id' is missing")
+		return -1, errors.New("Url Param 'id' is missing: ")
 	}
 	return strconv.Atoi(keys[0])
 }
@@ -105,7 +105,7 @@ func savePostHandler(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, "/", 301)
 }
 
-func newPostHandler(res http.ResponseWriter, req *http.Request) {
+func newPostHandler(res http.ResponseWriter, _ *http.Request) {
 	tpl := tmpl.GetTemplateByName("edit")
 	if err := tpl.Execute(res, models.NewPost(-1, "", "")); err != nil {
 		log.Println(err)
