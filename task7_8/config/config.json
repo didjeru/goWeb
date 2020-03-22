@@ -1,0 +1,12 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": "3306",
+    "user": "root",
+    "password": "qwerty",
+    "base": "blog",
+    "table": "posts"
+  },
+  "host": "localhost",
+  "port": "8080"
+}
