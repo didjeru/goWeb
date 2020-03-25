@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>List post</title>
+</head>
+<body>
+    <h1>Posts:</h1>
+    <ul>
+    {{range $post := .}}
+        <li><a href="/post?id={{$post.ID}}">{{$post.Title}}</a> <a href="/edit?id={{$post.ID}}">edit</a></li>
+    {{end}}
+    </ul>
+    <a href="/new">Add new post</a>
+</body>
+</html>

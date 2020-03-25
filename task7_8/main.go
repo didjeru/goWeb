@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./config"
 	"./db"
 	"./models"
 	"./templates"
@@ -8,22 +9,38 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var data = db.Init()
+var conf = config.LoadConfiguration("./config/config.json")
+var data = db.Init(conf.Database)
 var tmpl = templates.Init()
 
 func main() {
+
+	f, err := os.OpenFile("test.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Println(err)
+	}
+	if f != nil {
+		defer func() {
+			if err := f.Close(); err != nil {
+				log.Println(err)
+			}
+		}()
+	}
+	log.SetOutput(f)
+
 	http.HandleFunc("/new", newPostHandler)
 	http.HandleFunc("/edit", editPostHandler)
 	http.HandleFunc("/post", getPostHandler)
 	http.HandleFunc("/save", savePostHandler)
 	http.HandleFunc("/", indexHandler)
 
-	port := "8080"
+	port := conf.Port
 	log.Println("Server started at port", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
